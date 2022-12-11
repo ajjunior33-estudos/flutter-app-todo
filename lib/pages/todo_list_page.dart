@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo/models/todo.dart';
+import 'package:todo/repositories/todo_repository.dart';
 
 import '../widgets/todo_list_item.dart';
 
@@ -12,11 +13,23 @@ class TodoListPage extends StatefulWidget {
 
 class _TodoListPageState extends State<TodoListPage> {
   final TextEditingController todoController = TextEditingController();
+  final TodoRepository todoRepository = TodoRepository();
 
   List<Todo> todos = [];
 
   Todo? deletedTodo;
   int? deletedTodoPos;
+
+  @override
+  void initState(){
+    super.initState();
+
+    todoRepository.getTodoList().then((value){
+      setState(() {
+        todos = value;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +65,7 @@ class _TodoListPageState extends State<TodoListPage> {
                         todos.add(newTodo);
                       });
                       todoController.clear();
+                      todoRepository.saveTodoList(todos);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff00f7f3),
@@ -64,7 +78,7 @@ class _TodoListPageState extends State<TodoListPage> {
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
@@ -74,7 +88,7 @@ class _TodoListPageState extends State<TodoListPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -109,8 +123,9 @@ class _TodoListPageState extends State<TodoListPage> {
     setState(() {
       todos.remove(todo);
     });
+    todoRepository.saveTodoList(todos);
 
-    ScaffoldMessenger.of(context).clearSnackBars();
+gi    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Colors.white,
@@ -127,6 +142,7 @@ class _TodoListPageState extends State<TodoListPage> {
             setState(() {
               todos.insert(deletedTodoPos!, deletedTodo!);
             });
+            todoRepository.saveTodoList(todos);
           },
         ),
         duration: const Duration(seconds: 5),
@@ -168,5 +184,6 @@ class _TodoListPageState extends State<TodoListPage> {
     setState(() {
       todos.clear();
     });
+    todoRepository.saveTodoList(todos);
   }
 }
