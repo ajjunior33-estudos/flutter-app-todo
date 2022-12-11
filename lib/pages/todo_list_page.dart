@@ -15,6 +15,9 @@ class _TodoListPageState extends State<TodoListPage> {
 
   List<Todo> todos = [];
 
+  Todo? deletedTodo;
+  int? deletedTodoPos;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -67,7 +70,7 @@ class _TodoListPageState extends State<TodoListPage> {
                   shrinkWrap: true,
                   children: [
                     for (Todo todo in todos)
-                      TodoListItem(todo: todo)
+                      TodoListItem(todo: todo, onDelete: onDelete)
                   ],
                 ),
               ),
@@ -82,7 +85,7 @@ class _TodoListPageState extends State<TodoListPage> {
                     width: 8,
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: showDeleteTodosConfirmationDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff00f7f3),
                       padding: const EdgeInsets.all(14),
@@ -98,5 +101,72 @@ class _TodoListPageState extends State<TodoListPage> {
         ),
       )),
     );
+  }
+
+  void onDelete(Todo todo) {
+    deletedTodo = todo;
+    deletedTodoPos = todos.indexOf(todo);
+    setState(() {
+      todos.remove(todo);
+    });
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.white,
+        content: Text(
+          "Tarefa ${todo.title} foi removida com sucesso.",
+          style: const TextStyle(
+            color: Color(0xff060708),
+          ),
+        ),
+        action: SnackBarAction(
+          label: "Desfazer",
+          textColor: const Color(0xff00d7f3),
+          onPressed: () {
+            setState(() {
+              todos.insert(deletedTodoPos!, deletedTodo!);
+            });
+          },
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
+  void showDeleteTodosConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Limpar Tudo?"),
+        content: const Text("Você tem certeza que deseja apagar tudo ?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            style: TextButton.styleFrom(
+              primary: const Color(0xfff00d7f3),
+            ),
+            child: const Text("Cancelar"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              deleteAllTodos();
+            },
+            style: TextButton.styleFrom(
+              primary: Colors.red,
+            ),
+            child: const Text("Limapr tudo"),
+          )
+        ],
+      ),
+    );
+  }
+  void deleteAllTodos(){
+    setState(() {
+      todos.clear();
+    });
   }
 }
